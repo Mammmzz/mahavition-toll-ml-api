@@ -1,0 +1,100 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# Python related
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+venv/
+plat_nomor_backend/venv/
+
+# Laravel related
+/toll-api/node_modules
+/toll-api/public/hot
+/toll-api/public/storage
+/toll-api/storage/*.key
+/toll-api/vendor
+/toll-api/.env.backup
+/toll-api/.phpunit.result.cache
+/toll-api/docker-compose.override.yml
+/toll-api/Homestead.json
+/toll-api/Homestead.yaml
+/toll-api/npm-debug.log
+/toll-api/yarn-error.log
+
+# YOLO models (large files)
+*.pt
+
+# Dataset files
+*.jpg
+*.jpeg
+*.png
+*.mp4
+*.avi
+*.mov
+
+# Temporary files
+*.tmp
+*.bak
+temp/
+tmp/

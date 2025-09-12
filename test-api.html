@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Testing - E-Toll Plat</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+        
+        h1 {
+            color: #2979FF;
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #2979FF;
+            padding-bottom: 10px;
+        }
+        
+        h2 {
+            color: #2E3B62;
+            margin-top: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        }
+        
+        .endpoint {
+            background-color: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-left: 5px solid #2979FF;
+            border-radius: 5px;
+        }
+        
+        .method {
+            font-weight: bold;
+            color: white;
+            background-color: #2979FF;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        
+        .get { background-color: #4CAF50; }
+        .post { background-color: #2196F3; }
+        .put { background-color: #FF9800; }
+        .delete { background-color: #F44336; }
+        
+        .url {
+            font-family: monospace;
+            font-size: 1.1em;
+        }
+        
+        .params {
+            margin-top: 10px;
+            margin-left: 20px;
+            font-family: monospace;
+        }
+        
+        .response {
+            background-color: #f1f1f1;
+            border-left: 5px solid #ccc;
+            padding: 10px;
+            margin-top: 10px;
+            white-space: pre;
+            overflow-x: auto;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        
+        .description {
+            margin-top: 10px;
+            font-style: italic;
+            color: #666;
+        }
+        
+        .test-button {
+            display: inline-block;
+            background-color: #2979FF;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            margin-top: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .test-button:hover {
+            background-color: #1565C0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>API E-Toll Plat</h1>
+        
+        <h2>Autentikasi</h2>
+        
+        <div class="endpoint">
+            <span class="method post">POST</span>
+            <span class="url">/api/login</span>
+            <div class="description">Login dan dapatkan data user</div>
+            <div class="params">
+                Body:
+                <pre>{
+  "username": "johndoe",
+  "password": "password123"
+}</pre>
+            </div>
+            <button class="test-button" data-method="POST" data-url="/api/login" data-body='{"username":"johndoe","password":"password123"}'>Test</button>
+            <div class="response" id="login-response"></div>
+        </div>
+        
+        <div class="endpoint">
+            <span class="method post">POST</span>
+            <span class="url">/api/register</span>
+            <div class="description">Daftar user baru</div>
+            <div class="params">
+                Body:
+                <pre>{
+  "username": "newuser",
+  "name": "New User",
+  "nama_lengkap": "New User Full Name",
+  "email": "new@example.com",
+  "password": "password123",
+  "plat_nomor": "B 9876 XYZ"
+}</pre>
+            </div>
+            <button class="test-button" data-method="POST" data-url="/api/register" data-body='{"username":"newuser","name":"New User","nama_lengkap":"New User Full Name","email":"new@example.com","password":"password123","plat_nomor":"B 9876 XYZ"}'>Test</button>
+            <div class="response" id="register-response"></div>
+        </div>
+        
+        <h2>User API</h2>
+        
+        <div class="endpoint">
+            <span class="method get">GET</span>
+            <span class="url">/api/users</span>
+            <div class="description">Mendapatkan semua user</div>
+            <button class="test-button" data-method="GET" data-url="/api/users">Test</button>
+            <div class="response" id="get-users-response"></div>
+        </div>
+        
+        <div class="endpoint">
+            <span class="method get">GET</span>
+            <span class="url">/api/users/1</span>
+            <div class="description">Mendapatkan data user dengan ID 1</div>
+            <button class="test-button" data-method="GET" data-url="/api/users/1">Test</button>
+            <div class="response" id="get-user-response"></div>
+        </div>
+        
+        <div class="endpoint">
+            <span class="method put">PUT</span>
+            <span class="url">/api/users/1</span>
+            <div class="description">Memperbarui user dengan ID 1</div>
+            <div class="params">
+                Body:
+                <pre>{
+  "alamat": "Jl. Jakarta Baru No. 456"
+}</pre>
+            </div>
+            <button class="test-button" data-method="PUT" data-url="/api/users/1" data-body='{"alamat":"Jl. Jakarta Baru No. 456"}'>Test</button>
+            <div class="response" id="update-user-response"></div>
+        </div>
+        
+        <div class="endpoint">
+            <span class="method put">PUT</span>
+            <span class="url">/api/users/1/saldo</span>
+            <div class="description">Memperbarui saldo user dengan ID 1</div>
+            <div class="params">
+                Body:
+                <pre>{
+  "saldo": 150000
+}</pre>
+            </div>
+            <button class="test-button" data-method="PUT" data-url="/api/users/1/saldo" data-body='{"saldo":150000}'>Test</button>
+            <div class="response" id="update-saldo-response"></div>
+        </div>
+        
+        <div class="endpoint">
+            <span class="method post">POST</span>
+            <span class="url">/api/users/plat-nomor</span>
+            <div class="description">Mencari user berdasarkan plat nomor</div>
+            <div class="params">
+                Body:
+                <pre>{
+  "plat_nomor": "B 1234 XYZ"
+}</pre>
+            </div>
+            <button class="test-button" data-method="POST" data-url="/api/users/plat-nomor" data-body='{"plat_nomor":"B 1234 XYZ"}'>Test</button>
+            <div class="response" id="get-by-plate-response"></div>
+        </div>
+        
+        <h2>Tarif API</h2>
+        
+        <div class="endpoint">
+            <span class="method get">GET</span>
+            <span class="url">/api/tarifs</span>
+            <div class="description">Mendapatkan semua tarif</div>
+            <button class="test-button" data-method="GET" data-url="/api/tarifs">Test</button>
+            <div class="response" id="get-tarifs-response"></div>
+        </div>
+        
+        <h2>Transaction API</h2>
+        
+        <div class="endpoint">
+            <span class="method get">GET</span>
+            <span class="url">/api/transactions</span>
+            <div class="description">Mendapatkan semua transaksi</div>
+            <button class="test-button" data-method="GET" data-url="/api/transactions">Test</button>
+            <div class="response" id="get-transactions-response"></div>
+        </div>
+        
+        <div class="endpoint">
+            <span class="method post">POST</span>
+            <span class="url">/api/transactions</span>
+            <div class="description">Membuat transaksi baru</div>
+            <div class="params">
+                Body:
+                <pre>{
+  "user_id": 1,
+  "tarif_id": 1
+}</pre>
+            </div>
+            <button class="test-button" data-method="POST" data-url="/api/transactions" data-body='{"user_id":1,"tarif_id":1}'>Test</button>
+            <div class="response" id="create-transaction-response"></div>
+        </div>
+        
+        <div class="endpoint">
+            <span class="method get">GET</span>
+            <span class="url">/api/users/1/transactions</span>
+            <div class="description">Mendapatkan transaksi user dengan ID 1</div>
+            <button class="test-button" data-method="GET" data-url="/api/users/1/transactions">Test</button>
+            <div class="response" id="get-user-transactions-response"></div>
+        </div>
+        
+        <div class="endpoint">
+            <span class="method post">POST</span>
+            <span class="url">/api/transactions/plate</span>
+            <div class="description">Membuat transaksi berdasarkan plat nomor</div>
+            <div class="params">
+                Body:
+                <pre>{
+  "plat_nomor": "B 1234 XYZ",
+  "tarif_id": 1
+}</pre>
+            </div>
+            <button class="test-button" data-method="POST" data-url="/api/transactions/plate" data-body='{"plat_nomor":"B 1234 XYZ","tarif_id":1}'>Test</button>
+            <div class="response" id="create-plate-transaction-response"></div>
+        </div>
+    </div>
+
+    <script>
+        const apiUrl = 'http://localhost:8000'; // Ganti dengan URL server API Anda
+        
+        document.querySelectorAll('.test-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const method = this.getAttribute('data-method');
+                const url = apiUrl + this.getAttribute('data-url');
+                const body = this.getAttribute('data-body');
+                const responseId = this.nextElementSibling.id;
+                
+                const options = {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                };
+                
+                if (method !== 'GET' && body) {
+                    options.body = body;
+                }
+                
+                document.getElementById(responseId).textContent = 'Loading...';
+                
+                fetch(url, options)
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById(responseId).textContent = JSON.stringify(data, null, 2);
+                    })
+                    .catch(error => {
+                        document.getElementById(responseId).textContent = 'Error: ' + error.message;
+                    });
+            });
+        });
+    </script>
+</body>
+</html>
