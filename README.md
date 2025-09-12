@@ -46,24 +46,107 @@ Sistem gerbang tol otomatis dengan pengenalan plat nomor dan klasifikasi kendara
 - PHP 8.1+
 - MySQL/MariaDB
 - LAMPP/XAMPP (untuk pengembangan lokal)
+- Git
+- Flutter SDK (versi terbaru)
+- Dart SDK (versi terbaru)
+- Android Studio / VS Code
 
+### Cara Clone Repository
+
+#### Windows
+1. Install Git dari [https://git-scm.com/download/win](https://git-scm.com/download/win)
+2. Buka Command Prompt atau Git Bash
+3. Clone repository:
+   ```
+   git clone https://github.com/Mammmzz/odik.git
+   cd odik
+   ```
+
+#### Linux
+1. Install Git (jika belum):
+   ```
+   sudo apt install git  # Ubuntu/Debian
+   sudo yum install git  # CentOS/RHEL
+   ```
+2. Clone repository:
+   ```
+   git clone https://github.com/Mammmzz/odik.git
+   cd odik
+   ```
+
+### Download Files yang Tidak Ada di GitHub
+Beberapa file tidak disertakan dalam repository karena ukurannya yang besar atau karena alasan keamanan. Download dan siapkan file-file berikut:
+
+1. YOLO Models (letakkan di direktori `plat_nomor_backend`):
+   - [yolov8n.pt](https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8n.pt)
+   - [license_plate_detector.pt](https://drive.google.com/uc?id=1YD1dzYOyR9SNGr3ve3T9BAf3W3wZSzXW)
+
+2. Laravel Environment (.env) di folder `toll-api`:
+   - Gunakan template dari file .env.example (petunjuk ada di bagian Backend Laravel)
+
+3. Database:
+   - Buat database kosong sesuai dengan nama yang dikonfigurasi di `.env`
+   - Struktur database akan dibuat otomatis melalui migrasi Laravel
+
+4. Media Assets (opsional, jika perlu untuk testing):
+   - Letakkan file gambar plat nomor sample di folder `plat_nomor_backend/img/`
+   - Atau gunakan webcam untuk testing langsung
+   
 ### Aplikasi Python
-1. Clone repository
-2. Masuk ke direktori `plat_nomor_backend`
-3. Buat virtual environment: `python -m venv venv`
-4. Aktifkan virtual environment:
+1. Masuk ke direktori `plat_nomor_backend`
+2. Buat virtual environment:
+   ```
+   python -m venv venv
+   ```
+3. Aktifkan virtual environment:
    - Windows: `venv\Scripts\activate`
    - Linux/Mac: `source venv/bin/activate`
-5. Install dependencies: `pip install -r requirements.txt`
-6. Jalankan aplikasi: `python toll_gate_app.py`
+4. Install dependencies:
+   ```
+   pip install -r requirements.txt
+   ```
+5. Jalankan aplikasi:
+   ```
+   python toll_gate_app.py
+   ```
 
 ### Backend Laravel
 1. Masuk ke direktori `toll-api`
-2. Install dependencies: `composer install`
-3. Salin `.env.example` ke `.env` dan sesuaikan konfigurasi database
-4. Generate key aplikasi: `php artisan key:generate`
-5. Jalankan migrasi dan seeder: `php artisan migrate:fresh --seed`
-6. Jalankan server: `php artisan serve --port=8080`
+2. Install dependencies:
+   ```
+   composer install
+   ```
+3. Salin `.env.example` ke `.env`:
+   - Windows: `copy .env.example .env`
+   - Linux/Mac: `cp .env.example .env`
+4. Sesuaikan konfigurasi database di file `.env`
+5. Generate key aplikasi:
+   ```
+   php artisan key:generate
+   ```
+6. Jalankan migrasi dan seeder:
+   ```
+   php artisan migrate:fresh --seed
+   ```
+7. Jalankan server:
+   ```
+   php artisan serve --port=8080
+   ```
+
+### Aplikasi Flutter
+1. Pastikan Flutter SDK sudah terinstall ([panduan instalasi Flutter](https://flutter.dev/docs/get-started/install))
+2. Masuk ke direktori root project
+3. Install dependencies:
+   ```
+   flutter pub get
+   ```
+4. Sesuaikan endpoint API di `lib/core/services/api_service.dart` sesuai dengan konfigurasi server Laravel Anda
+5. Jalankan aplikasi:
+   ```
+   flutter run
+   ```
+   
+   Atau buka project dengan Android Studio/VS Code dan jalankan dari sana.
 
 ## Pengembangan Lanjutan
 
