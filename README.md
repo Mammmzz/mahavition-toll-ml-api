@@ -136,12 +136,15 @@ Beberapa file tidak disertakan dalam repository karena ukurannya yang besar atau
 ### Aplikasi Flutter
 1. Pastikan Flutter SDK sudah terinstall ([panduan instalasi Flutter](https://flutter.dev/docs/get-started/install))
 2. Masuk ke direktori root project
-3. Install dependencies:
+3. **PENTING**: Folder `lib` mungkin tidak ada karena masalah .gitignore. Download folder lib dari link berikut dan letakkan di root project:
+   - [Download Flutter lib folder](https://drive.google.com/file/d/1Z9dIV3bpPgS1t_hH-UdW8s8ZBfLcYzG2/view?usp=sharing)
+   - Atau clone ulang setelah menarik perubahan terbaru (yang sudah memperbaiki .gitignore)
+4. Install dependencies:
    ```
    flutter pub get
    ```
-4. Sesuaikan endpoint API di `lib/core/services/api_service.dart` sesuai dengan konfigurasi server Laravel Anda
-5. Jalankan aplikasi:
+5. Sesuaikan endpoint API di `lib/core/services/api_service.dart` sesuai dengan konfigurasi server Laravel Anda
+6. Jalankan aplikasi:
    ```
    flutter run
    ```

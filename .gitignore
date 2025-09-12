@@ -57,7 +57,8 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+# Python lib directories (but not Flutter lib)
+/plat_nomor_backend/lib/
 lib64/
 parts/
 sdist/
