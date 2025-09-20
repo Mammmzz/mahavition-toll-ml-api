@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "713687848419",
+    "project_id": "mahavision-toll",
+    "storage_bucket": "mahavision-toll.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:713687848419:android:2a71ca97846e789f3b7cd6",
+        "android_client_info": {
+          "package_name": "com.example.lomba"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDDMgt2SOy9uW1_VNo5TYLUq-2-T3OtZm8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

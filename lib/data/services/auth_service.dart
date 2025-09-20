@@ -1,7 +1,10 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert'; // Import for jsonDecode
 import '../../core/services/api_service.dart';
 import '../../core/utils/api_constants.dart';
 import '../models/user_model.dart';
+import '../../services/fcm_service.dart';
+import 'package:flutter/foundation.dart'; // Import for debugPrint
 
 class AuthService {
   static final AuthService _instance = AuthService._internal();
@@ -17,75 +20,87 @@ class AuthService {
   String? get token => _token;
   bool get isLoggedIn => _currentUser != null && _token != null;
 
-  // Login dengan plat nomor (tanpa password karena sistem toll)
-  Future<User> loginWithPlateNumber(String plateNumber) async {
+  // Login dengan email dan password
+  Future<User> loginWithEmailAndPassword(String email, String password) async {
     try {
+      debugPrint('🔐 Starting login for: $email');
+      
+      // Single API call untuk login dan mendapatkan semua data yang diperlukan
       final response = await _apiService.post(
-        ApiConstants.validatePlate,
-        {'plat_nomor': plateNumber},
-      );
-
-      if (response['success'] == true && response['valid'] == true) {
-        final userData = response['data']['user'];
-        _currentUser = User.fromJson(userData);
-        
-        // Generate simple token dari plat nomor untuk session
-        _token = 'plate_${plateNumber}_${DateTime.now().millisecondsSinceEpoch}';
-        
-        // Simpan ke SharedPreferences
-        await _saveAuthData();
-        
-        return _currentUser!;
-      } else {
-        throw Exception(response['message'] ?? 'Plat nomor tidak terdaftar');
-      }
-    } catch (e) {
-      throw Exception('Login gagal: $e');
-    }
-  }
-
-  // Login dengan plat nomor dan kelompok kendaraan (double validation)
-  Future<User> loginWithPlateAndVehicle(String plateNumber, String vehicleType) async {
-    try {
-      final response = await _apiService.post(
-        ApiConstants.validatePlateVehicle,
+        '${ApiConstants.baseUrl}/auth/login',
         {
-          'plat_nomor': plateNumber,
-          'kelompok_kendaraan': vehicleType,
+          'email': email,
+          'password': password,
         },
       );
 
-      if (response['success'] == true && response['valid'] == true) {
-        final userData = response['data']['user'];
-        _currentUser = User.fromJson(userData);
+      debugPrint('📡 Login API Response: $response');
+      debugPrint('🔍 Response success field: ${response['success']}');
+      debugPrint('🔍 Response type: ${response['success'].runtimeType}');
+
+      // Handle different possible API response formats
+      bool isSuccess = false;
+      
+      if (response['success'] == true || 
+          response['success'] == 'true' || 
+          response['success'] == 1 ||
+          (response.containsKey('data') || response.containsKey('user')) ||
+          (response.containsKey('id') && response.containsKey('email'))) {
+        isSuccess = true;
+      }
+      
+      debugPrint('🎯 Final success status: $isSuccess');
+
+      if (isSuccess) {
+        // Try to find user data in different possible locations
+        final userData = response['data'] ?? response['user'] ?? response;
+        debugPrint('👤 User data received: $userData');
         
-        // Generate simple token dari plat nomor untuk session
-        _token = 'plate_${plateNumber}_${DateTime.now().millisecondsSinceEpoch}';
+        _currentUser = User.fromJson(userData);
+        debugPrint('✅ User object created: ${_currentUser?.email}');
+        
+        // Gunakan token dari API response jika ada, atau buat session token
+        _token = response['token'] ?? 'session_${email}_${DateTime.now().millisecondsSinceEpoch}';
+        debugPrint('🔑 Token set: $_token');
         
         // Simpan ke SharedPreferences
         await _saveAuthData();
+        debugPrint('💾 Auth data saved');
         
+        // FCM initialization dan registration dilakukan secara asinkron (non-blocking)
+        // Ini tidak akan memperlambat login
+        _initializeFCMAsync();
+        
+        debugPrint('🎉 Login successful for: $email');
         return _currentUser!;
       } else {
-        throw Exception(response['message'] ?? 'Data tidak sesuai');
+        debugPrint('❌ Login failed - API returned success: ${response['success']}');
+        debugPrint('❌ API message: ${response['message']}');
+        throw Exception(response['message'] ?? 'Email atau password salah');
       }
     } catch (e) {
+      debugPrint('💥 Login exception: $e');
       throw Exception('Login gagal: $e');
     }
   }
 
-  // Get user data by plate number
-  Future<User?> getUserByPlateNumber(String plateNumber) async {
+  // FCM initialization dilakukan secara asinkron untuk tidak memblokir login
+  void _initializeFCMAsync() async {
     try {
-      final response = await _apiService.get('${ApiConstants.plates}?plat_nomor=$plateNumber');
+      await FCMService.initialize();
       
-      if (response['success'] == true && response['data'] != null) {
-        return User.fromJson(response['data']);
+      // Jika ada token API, register FCM token
+      if (_token != null && _token!.startsWith('session_') == false) {
+        bool registered = await FCMService.registerToken(_token!);
+        if (registered) {
+          debugPrint('✅ FCM token registered successfully');
+        } else {
+          debugPrint('⚠️ FCM token registration failed');
+        }
       }
-      return null;
     } catch (e) {
-      print('Error getting user by plate: $e');
-      return null;
+      debugPrint('❌ FCM initialization failed: $e');
+      // Tidak throw error karena login sudah berhasil
     }
   }
 
@@ -128,22 +143,18 @@ class AuthService {
       final userJson = prefs.getString('auth_user');
       final token = prefs.getString('auth_token');
       
-      if (userJson != null && token != null) {
-        final userData = Map<String, dynamic>.from(
-          // Convert string to Map if needed
-          userJson.contains('{') 
-            ? {} // Parse JSON string if needed
-            : {},
-        );
-        
-        // Simple check - jika ada data user tersimpan
-        if (userJson.isNotEmpty && token.isNotEmpty) {
-          _token = token;
-          // _currentUser akan di-load saat dibutuhkan
+      if (userJson != null && token != null && userJson.isNotEmpty && token.isNotEmpty) {
+        _token = token;
+        try {
+          final Map<String, dynamic> userData = jsonDecode(userJson);
+          _currentUser = User.fromJson(userData);
+        } catch (e) {
+          debugPrint('Error parsing user JSON from SharedPreferences: $e');
+          _currentUser = null;
         }
       }
     } catch (e) {
-      print('Error loading auth data: $e');
+      debugPrint('Error loading auth data: $e');
     }
   }
 
@@ -153,11 +164,18 @@ class AuthService {
       final prefs = await SharedPreferences.getInstance();
       
       if (_currentUser != null && _token != null) {
-        await prefs.setString('auth_user', _currentUser!.toJson().toString());
+        // Simpan data pengguna dalam format JSON
+        final userJson = _currentUser!.toJson();
+        await prefs.setString('auth_user', userJson.toString());
         await prefs.setString('auth_token', _token!);
+        
+        // Simpan email terpisah untuk memudahkan auto-login berikutnya
+        if (_currentUser!.email != null && _currentUser!.email!.isNotEmpty) {
+          await prefs.setString('auth_email', _currentUser!.email!);
+        }
       }
     } catch (e) {
-      print('Error saving auth data: $e');
+      debugPrint('Error saving auth data: $e');
     }
   }
 }

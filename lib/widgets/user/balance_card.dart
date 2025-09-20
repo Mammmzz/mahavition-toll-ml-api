@@ -65,7 +65,7 @@ class BalanceCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      'E-Tol Wallet',
+                      'EZToll Wallet',
                       style: GoogleFonts.poppins(
                         fontSize: 12,
                         color: Colors.white,
@@ -79,7 +79,7 @@ class BalanceCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Rp${balance.toStringAsFixed(0)}',
+            'Rp${balance.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}',
             style: GoogleFonts.poppins(
               fontSize: 28,
               fontWeight: FontWeight.bold,

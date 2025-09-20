@@ -18,6 +18,7 @@ import numpy as np
 import urllib.request
 import warnings
 import difflib
+import io
 try:
     import pygame  # Untuk memainkan file audio
     pygame.mixer.init()
@@ -306,16 +307,20 @@ class ParticleAnimation:
 class TollGateApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("E-Toll Gate System - Automatic License Plate Recognition")
+        self.root.title("EZToll Gate System - Automatic License Plate Recognition")
         # Maximize window - cross platform
         try:
             self.root.state('zoomed')  # Windows
         except:
             self.root.attributes('-zoomed', True)  # Linux
+            # Tambahkan metode alternatif untuk memaksimalkan pada Linux
+            self.root.attributes('-fullscreen', True)
+            # Tambahkan binding untuk keluar dari fullscreen dengan Escape
+            self.root.bind('<Escape>', lambda event: self.toggle_fullscreen())
         self.root.configure(bg="#0a1128")
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
 
-        # API URL - menggunakan API baru
+        # API URL - menggunakan API baru (localhost untuk testing)
         self.api_url = "http://127.0.0.1:8080/api"
         
         # Current user data from API
@@ -634,9 +639,9 @@ class TollGateApp:
         # Buat window popup
         popup = tk.Toplevel(self.root)
         popup.title(title)
-        popup.geometry("450x350")
+        popup.geometry("500x450")  # Ukuran diperbesar agar konten tidak terpotong
         popup.configure(bg=self.colors["success"])
-        popup.resizable(False, False)
+        popup.resizable(True, True)  # Buat resizable agar bisa disesuaikan jika perlu
         
         # Posisikan di tengah layar
         popup.update_idletasks()
@@ -669,19 +674,84 @@ class TollGateApp:
         # Pesan
         message_label = tk.Label(content_frame, text=message, font=("Roboto", 12), 
                                bg="white", fg=self.colors["bg_dark"],
-                               justify="center", wraplength=380)
+                               justify="center", wraplength=430)  # Tambahkan wraplength untuk menghindari teks terpotong
         message_label.pack(pady=10)
         
-        # Tombol OK
-        ok_button = tk.Button(content_frame, text="OK", font=("Montserrat", 12, "bold"),
+        # Tombol OK/TUTUP yang lebih besar dan jelas
+        ok_button = tk.Button(content_frame, text="TUTUP", font=("Montserrat", 14, "bold"),
                             bg=self.colors["success"], fg="white", 
-                            padx=30, pady=8, cursor="hand2",
+                            padx=40, pady=10, cursor="hand2",
                             command=popup.destroy)
         ok_button.pack(pady=20)
         
-        # Auto close setelah 5 detik
-        popup.after(5000, popup.destroy)
+        # Auto close setelah 8 detik (waktu lebih lama untuk membaca)
+        popup.after(8000, popup.destroy)
         
+    def send_fcm_notification(self, user_data, transaction_data, saldo_lama, saldo_baru):
+        """
+        Mengirim notifikasi FCM ke mobile app melalui Laravel API
+        """
+        try:
+            # Login dulu untuk mendapatkan token
+            auth_response = requests.post(
+                f"{self.api_url}/auth/login",
+                json={
+                    "email": user_data.get('email', ''),
+                    "password": "password123"  # Sesuaikan dengan password yang benar
+                },
+                timeout=10
+            )
+            
+            if auth_response.status_code == 200:
+                auth_data = auth_response.json()
+                auth_token = auth_data.get('token')
+                
+                if auth_token:
+                    # Format pesan notifikasi
+                    nama = user_data.get('nama_lengkap', 'Pengguna')
+                    plat = transaction_data.get('plat_nomor', 'N/A')
+                    tarif = transaction_data.get('tarif', 0)
+                    
+                    title = "🚗 Transaksi Tol Berhasil"
+                    body = f"Halo {nama}! Transaksi untuk kendaraan {plat} berhasil. "
+                    body += f"Tarif: Rp {tarif:,.0f}. Saldo akhir: Rp {saldo_baru:,.0f}".replace(",", ".")
+                    
+                    # Kirim notifikasi melalui API
+                    notif_response = requests.post(
+                        f"{self.api_url}/notify-transaction",
+                        json={
+                            "title": title,
+                            "body": body,
+                            "data": {
+                                "type": "transaction",
+                                "transaction_id": transaction_data.get('id'),
+                                "plat_nomor": plat,
+                                "tarif": str(tarif),
+                                "saldo_baru": str(saldo_baru),
+                                "nama": nama
+                            }
+                        },
+                        headers={
+                            "Authorization": f"Bearer {auth_token}",
+                            "Content-Type": "application/json"
+                        },
+                        timeout=10
+                    )
+                    
+                    if notif_response.status_code == 200:
+                        print(f"📱 FCM notification sent successfully to {nama}")
+                    else:
+                        print(f"❌ FCM notification failed: {notif_response.status_code}")
+                        if notif_response.status_code != 404:  # Avoid spam for missing endpoints
+                            print(f"Response: {notif_response.text}")
+                else:
+                    print("❌ No auth token received")
+            else:
+                print(f"❌ Authentication failed: {auth_response.status_code}")
+                
+        except Exception as e:
+            print(f"❌ Error sending FCM notification: {str(e)}")
+
     def play_success_sound(self):
         """
         Memainkan suara beep saat transaksi berhasil
@@ -752,18 +822,40 @@ class TollGateApp:
     
     def create_widgets(self):
         # Header with gradient effect
-        header_frame = self.create_gradient_frame(self.root, self.colors["bg_dark"], self.colors["bg_light"], height=70)
+        header_frame = self.create_gradient_frame(self.root, self.colors["bg_dark"], self.colors["bg_light"], height=80)  # Increased header height
         
-        # Logo and title in header
-        logo_text = "E-TOLL"
-        logo_label = tk.Label(header_frame, text=logo_text, font=("Montserrat", 24, "bold"), 
+        # Load school logo
+        try:
+            logo_path = "/home/archmam/AndroidStudioProjects/lomba/plat_nomor_backend/img/images.png"
+            logo_image = Image.open(logo_path)
+            # Resize logo to appropriate height while maintaining aspect ratio
+            logo_height = 65  # Increased desired height
+            aspect_ratio = logo_image.width / logo_image.height
+            logo_width = int(logo_height * aspect_ratio)
+            logo_image = logo_image.resize((logo_width, logo_height), Image.LANCZOS)
+            logo_photo = ImageTk.PhotoImage(logo_image)
+            
+            # Create label for logo
+            self.logo_image_label = tk.Label(header_frame, image=logo_photo, bg=self.colors["bg_medium"])
+            self.logo_image_label.image = logo_photo  # Keep a reference to prevent garbage collection
+            self.logo_image_label.place(x=20, y=7)  # Adjusted y position for vertical centering
+            
+            # Adjust position for text after logo
+            logo_offset = logo_width + 30
+        except Exception as e:
+            print(f"Error loading school logo: {e}")
+            logo_offset = 20  # Default offset if logo fails to load
+        
+        # Logo text next to school logo
+        logo_text = "EZToll"
+        logo_label = tk.Label(header_frame, text=logo_text, font=("Montserrat", 28, "bold"), 
                             fg=self.colors["accent_light"], bg=self.colors["bg_medium"])
-        logo_label.place(x=20, y=15)
+        logo_label.place(x=logo_offset, y=17)  # Adjusted y position for vertical centering with larger font
         
         title_text = "AUTOMATIC LICENSE PLATE RECOGNITION"
         title_label = tk.Label(header_frame, text=title_text, font=self.title_font, 
                              fg=self.colors["text_light"], bg=self.colors["bg_medium"])
-        title_label.place(x=150, y=18)
+        title_label.place(x=logo_offset + 150, y=22)  # Adjusted position based on larger logo and text  # Adjusted position based on logo
         
         self.clock_label = tk.Label(header_frame, font=self.label_font, 
                                   fg=self.colors["text_light"], bg=self.colors["bg_medium"])
@@ -2020,28 +2112,24 @@ class TollGateApp:
                 is_valid = True
                 print("Plat nomor valid dari API")
                 
-                # Pre-check saldo jika data user tersedia
+                # Sistem Pay Later - Transaksi tetap lanjut meskipun saldo tidak mencukupi
                 if hasattr(self, 'current_user_data') and self.current_user_data:
                     try:
                         current_saldo = float(self.current_user_data.get('saldo', 0))
                         if current_saldo < tarif_amount:
-                            # Saldo tidak mencukupi - tampilkan peringatan dini
+                            # Saldo tidak mencukupi - sistem pay later aktif
                             kekurangan = tarif_amount - current_saldo
-                            warning_msg = f"⚠️ PERINGATAN: SALDO TIDAK MENCUKUPI!\n\n"
-                            warning_msg += f"Saldo saat ini: Rp {current_saldo:,.0f}\n"
-                            warning_msg += f"Tarif dibutuhkan: Rp {tarif_amount:,.0f}\n"
-                            warning_msg += f"Kekurangan: Rp {kekurangan:,.0f}\n\n"
-                            warning_msg += f"Transaksi akan dilanjutkan ke server untuk konfirmasi."
-                            warning_msg = warning_msg.replace(",", ".")
-                            
-                            # Tampilkan warning tapi lanjutkan proses
-                            response = messagebox.askquestion("💳 Saldo Tidak Mencukupi", 
-                                                            warning_msg + "\n\nLanjutkan transaksi?")
-                            if response != 'yes':
-                                self.status_bar.config(text="Transaksi dibatalkan oleh user")
-                                return
+                            print(f"💳 SISTEM PAY LATER: Saldo tidak mencukupi")
+                            print(f"Saldo saat ini: Rp {current_saldo:,.0f}")
+                            print(f"Tarif dibutuhkan: Rp {tarif_amount:,.0f}")
+                            print(f"Kekurangan: Rp {kekurangan:,.0f}")
+                            print(f"Saldo akan menjadi negatif: Rp {current_saldo - tarif_amount:,.0f}")
+                            print("✅ Transaksi dilanjutkan dengan sistem pay later")
+                        else:
+                            print(f"💰 Saldo mencukupi: Rp {current_saldo:,.0f}")
                     except (ValueError, TypeError):
                         # Jika ada error parsing saldo, lanjutkan saja
+                        print("⚠️ Tidak dapat memeriksa saldo, transaksi tetap dilanjutkan")
                         pass
             else:
                 is_valid = False
@@ -2120,6 +2208,9 @@ class TollGateApp:
                             "time": current_time,
                             "second": int(current_time)  # Simpan juga detik untuk pengecekan cepat
                         }
+                        
+                        # Kirim notifikasi FCM ke mobile app
+                        self.send_fcm_notification(user_data, transaction_data, saldo_lama, saldo_baru)
                         
                         # Buka palang pintu
                         self.open_gate()
@@ -2612,8 +2703,19 @@ class TollGateApp:
         # If not restarting, destroy the window
         if not restart:
             self.root.destroy()
+            
+    def toggle_fullscreen(self):
+        """Toggle fullscreen mode"""
+        is_fullscreen = self.root.attributes('-fullscreen')
+        self.root.attributes('-fullscreen', not is_fullscreen)
 
 if __name__ == "__main__":
     root = tk.Tk()
+    # Pastikan ukuran awal jendela cukup besar
+    root.geometry("1280x720")
+    # Maximize window sebelum aplikasi dimulai
+    root.update()
     app = TollGateApp(root)
+    # Pastikan window benar-benar dimaksimalkan setelah aplikasi dimulai
+    root.update()
     root.mainloop()

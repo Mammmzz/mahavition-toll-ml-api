@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import '../../core/utils/constants.dart';
 import '../../data/services/auth_service.dart';
-import '../../data/services/vehicle_service.dart';
 import '../user/user_dashboard.dart';
 
 class LoginPage extends StatefulWidget {
@@ -16,14 +15,14 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
-  final _plateController = TextEditingController();
-  final _vehicleService = VehicleService();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
   final _authService = AuthService();
   bool _isLoading = false;
   bool _rememberMe = true;
+  bool _obscurePassword = true;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
-  String _selectedVehicleType = 'Mobil';
 
   @override
   void initState() {
@@ -71,12 +70,10 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
       });
       
       try {
-        final plateNumber = _vehicleService.formatPlateNumber(_plateController.text);
-        
-        // Login menggunakan plat nomor dan kelompok kendaraan
-        final user = await _authService.loginWithPlateAndVehicle(
-          plateNumber, 
-          _selectedVehicleType
+        // Login menggunakan email dan password
+        final user = await _authService.loginWithEmailAndPassword(
+          _emailController.text.trim(),
+          _passwordController.text
         );
         
         setState(() {
@@ -116,7 +113,8 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
 
   @override
   void dispose() {
-    _plateController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
     _animationController.dispose();
     super.dispose();
   }
@@ -262,7 +260,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                             children: [
                               // Welcome Text
                               Text(
-                                'Masuk dengan Plat Nomor',
+                                'Masuk ke Akun Anda',
                                 style: GoogleFonts.poppins(
                                   fontSize: 24,
                                   fontWeight: FontWeight.bold,
@@ -271,7 +269,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                'Masukkan plat nomor dan jenis kendaraan Anda',
+                                'Masukkan email dan password Anda',
                                 style: GoogleFonts.poppins(
                                   fontSize: 14,
                                   color: AppColors.textLightColor,
@@ -280,18 +278,18 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                               
                               const SizedBox(height: 32),
                               
-                              // Plate Number field
+                              // Email field
                               _buildTextField(
-                                controller: _plateController,
-                                hint: 'Contoh: B 1234 ABC',
-                                prefixIcon: Icons.drive_eta_outlined,
-                                keyboardType: TextInputType.text,
+                                controller: _emailController,
+                                hint: 'Masukkan email',
+                                prefixIcon: Icons.email_outlined,
+                                keyboardType: TextInputType.emailAddress,
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
-                                    return 'Plat nomor tidak boleh kosong';
+                                    return 'Email tidak boleh kosong';
                                   }
-                                  if (value.length < 5) {
-                                    return 'Masukkan plat nomor yang valid';
+                                  if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                                    return 'Masukkan email yang valid';
                                   }
                                   return null;
                                 },
@@ -299,58 +297,29 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                               
                               const SizedBox(height: 20),
                               
-                              // Vehicle Type Dropdown
-                              Text(
-                                'Jenis Kendaraan',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: AppColors.textColor,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.symmetric(horizontal: 16),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFF8F9FA),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: DropdownButtonHideUnderline(
-                                  child: DropdownButton<String>(
-                                    value: _selectedVehicleType,
-                                    isExpanded: true,
-                                    icon: const Icon(
-                                      Icons.keyboard_arrow_down,
-                                      color: AppColors.textLightColor,
-                                    ),
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 15,
-                                      color: AppColors.textColor,
-                                    ),
-                                    items: _vehicleService.getVehicleTypes().map((String type) {
-                                      return DropdownMenuItem<String>(
-                                        value: type,
-                                        child: Row(
-                                          children: [
-                                            Icon(
-                                              _getVehicleIcon(type),
-                                              size: 20,
-                                              color: AppColors.primaryColor,
-                                            ),
-                                            const SizedBox(width: 12),
-                                            Text(type),
-                                          ],
-                                        ),
-                                      );
-                                    }).toList(),
-                                    onChanged: (String? newValue) {
-                                      setState(() {
-                                        _selectedVehicleType = newValue!;
-                                      });
-                                    },
+                              // Password field
+                              _buildTextField(
+                                controller: _passwordController,
+                                hint: 'Masukkan password',
+                                prefixIcon: Icons.lock_outline,
+                                obscureText: _obscurePassword,
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                                    color: AppColors.textLightColor,
+                                    size: 20,
                                   ),
+                                  onPressed: _togglePasswordVisibility,
                                 ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Password tidak boleh kosong';
+                                  }
+                                  if (value.length < 6) {
+                                    return 'Password minimal 6 karakter';
+                                  }
+                                  return null;
+                                },
                               ),
                               
                               const SizedBox(height: 16),
@@ -474,7 +443,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: Text(
-                                        'Pastikan plat nomor dan jenis kendaraan sesuai dengan data yang terdaftar',
+                                        'Silakan hubungi admin jika Anda lupa email atau password',
                                         style: GoogleFonts.poppins(
                                           fontSize: 12,
                                           color: AppColors.textColor,
@@ -555,16 +524,5 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     );
   }
   
-  IconData _getVehicleIcon(String vehicleType) {
-    switch (vehicleType) {
-      case 'Mobil':
-        return Icons.directions_car;
-      case 'Bus':
-        return Icons.directions_bus;
-      case 'Truk':
-        return Icons.local_shipping;
-      default:
-        return Icons.directions_car;
-    }
-  }
+  // Tidak diperlukan lagi karena sudah tidak menggunakan dropdown vehicle type
 }

@@ -34,7 +34,7 @@ class DatabaseSeeder extends Seeder
             'harga' => 20000
         ]);
 
-        // Seed Users
+        // Seed Users with kelompok_kendaraan
         \App\Models\User::create([
             'username' => 'johndoe',
             'nama_lengkap' => 'John Doe',
@@ -43,6 +43,7 @@ class DatabaseSeeder extends Seeder
             'password' => \Hash::make('password123'),
             'saldo' => 4040000,
             'plat_nomor' => 'B 8005 FAI',
+            'kelompok_kendaraan' => 'Mobil',
             'alamat' => 'Jl. Jakarta No. 123',
             'no_telp' => '08123456789'
         ]);
@@ -55,6 +56,7 @@ class DatabaseSeeder extends Seeder
             'password' => \Hash::make('password123'),
             'saldo' => 955000,
             'plat_nomor' => 'H 4534 HR',
+            'kelompok_kendaraan' => 'Bus',
             'alamat' => 'Jl. Bandung No. 456',
             'no_telp' => '089876543210'
         ]);
@@ -67,6 +69,7 @@ class DatabaseSeeder extends Seeder
             'password' => \Hash::make('password123'),
             'saldo' => 135000,
             'plat_nomor' => 'B 5432 KRI',
+            'kelompok_kendaraan' => 'Mobil',
             'alamat' => 'Jalan Test No. 1',
             'no_telp' => '08123456789'
         ]);
@@ -79,6 +82,7 @@ class DatabaseSeeder extends Seeder
             'password' => \Hash::make('password123'),
             'saldo' => 110000,
             'plat_nomor' => 'W 8390 SE',
+            'kelompok_kendaraan' => 'Truk',
             'alamat' => 'Jalan Test No. 2',
             'no_telp' => '08987654321'
         ]);
@@ -91,11 +95,12 @@ class DatabaseSeeder extends Seeder
             'password' => \Hash::make('password123'),
             'saldo' => 80000,
             'plat_nomor' => 'N 8475 PK',
+            'kelompok_kendaraan' => 'ambulan',
             'alamat' => 'Jalan Test No. 3',
             'no_telp' => '08111222333'
         ]);
         
-        // Tambahan 5 user baru
+        // Tambahan user dengan kelompok_kendaraan
         \App\Models\User::create([
             'username' => 'user4',
             'nama_lengkap' => 'Ahmad Rizki',
@@ -104,6 +109,7 @@ class DatabaseSeeder extends Seeder
             'password' => \Hash::make('password123'),
             'saldo' => 250000,
             'plat_nomor' => 'B 1122 JKT',
+            'kelompok_kendaraan' => 'Mobil',
             'alamat' => 'Jl. Sudirman No. 45',
             'no_telp' => '081234567891'
         ]);
@@ -116,6 +122,7 @@ class DatabaseSeeder extends Seeder
             'password' => \Hash::make('password123'),
             'saldo' => 175000,
             'plat_nomor' => 'D 2233 BDG',
+            'kelompok_kendaraan' => 'Bus',
             'alamat' => 'Jl. Asia Afrika No. 78',
             'no_telp' => '089876543211'
         ]);
@@ -128,6 +135,7 @@ class DatabaseSeeder extends Seeder
             'password' => \Hash::make('password123'),
             'saldo' => 320000,
             'plat_nomor' => 'F 3344 SMG',
+            'kelompok_kendaraan' => 'Truk',
             'alamat' => 'Jl. Pemuda No. 12',
             'no_telp' => '081122334455'
         ]);
@@ -140,6 +148,7 @@ class DatabaseSeeder extends Seeder
             'password' => \Hash::make('password123'),
             'saldo' => 185000,
             'plat_nomor' => 'T 4455 MLG',
+            'kelompok_kendaraan' => 'Mobil',
             'alamat' => 'Jl. Soekarno Hatta No. 90',
             'no_telp' => '089988776655'
         ]);
@@ -152,6 +161,7 @@ class DatabaseSeeder extends Seeder
             'password' => \Hash::make('password123'),
             'saldo' => 275000,
             'plat_nomor' => 'L 5566 SBY',
+            'kelompok_kendaraan' => 'ambulan',
             'alamat' => 'Jl. Darmo No. 33',
             'no_telp' => '081234987654'
         ]);

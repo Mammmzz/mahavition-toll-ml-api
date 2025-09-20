@@ -9,6 +9,8 @@ import '../../data/models/transaction_model.dart';
 import '../../data/models/user_model.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/transaction_service.dart';
+import 'all_transactions_page.dart';
+import 'profile_page.dart';
 
 class UserDashboard extends StatefulWidget {
   const UserDashboard({super.key});
@@ -110,9 +112,11 @@ class _UserDashboardState extends State<UserDashboard> {
   }
   
   void _handleViewAllTransactions() {
-    Fluttertoast.showToast(
-      msg: "Halaman semua transaksi akan segera hadir!",
-      backgroundColor: AppColors.accentColor,
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const AllTransactionsPage(),
+      ),
     );
   }
 
@@ -152,7 +156,7 @@ class _UserDashboardState extends State<UserDashboard> {
           _buildHomeTab(),
           _buildEmptyTab('Kendaraan'),
           _buildEmptyTab('Transaksi'),
-          _buildEmptyTab('Profil'),
+          const ProfilePage(),
         ],
       ),
       bottomNavigationBar: AppBottomNavigation(

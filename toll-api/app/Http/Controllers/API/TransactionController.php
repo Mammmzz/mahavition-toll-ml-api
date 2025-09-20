@@ -10,6 +10,7 @@ use App\Models\GateCondition;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class TransactionController extends Controller
 {
@@ -150,67 +151,94 @@ class TransactionController extends Controller
                 ], 404);
             }
 
-            // Check if user has enough balance
+            // Check if Pay Later is enabled (dapat ditambahkan ke request atau config)
+            $payLaterEnabled = $request->input('pay_later', true); // Default true untuk sistem pay later
+            
+            // Handle insufficient balance
             if ($user->saldo < $tarif->harga) {
-                // Create failed transaction record
-                $transaction = Transaction::create([
-                    'user_id' => $user->id,
-                    'tarif_id' => $tarif->id,
-                    'plat_nomor' => $request->plat_nomor,
-                    'jenis_kendaraan' => $request->jenis_kendaraan,
-                    'saldo_pembayaran' => $user->saldo,
-                    'status' => 'FAILED'
-                ]);
+                if (!$payLaterEnabled) {
+                    // Logic lama - Buat transaksi FAILED jika pay later disabled
+                    $now = now();
+                    $transaction = Transaction::create([
+                        'user_id' => $user->id,
+                        'tarif_id' => $tarif->id,
+                        'plat_nomor' => $request->plat_nomor,
+                        'jenis_kendaraan' => $request->jenis_kendaraan,
+                        'saldo_pembayaran' => $user->saldo,
+                        'status' => 'FAILED',
+                        'created_at' => $now,
+                        'updated_at' => $now
+                    ]);
 
-                DB::commit();
-
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Insufficient balance',
-                    'data' => [
-                        'user' => $user,
-                        'tarif' => $tarif,
-                        'transaction' => $transaction,
-                        'balance_needed' => $tarif->harga,
-                        'current_balance' => $user->saldo
-                    ]
-                ], 402); // Payment Required
+                    DB::commit();
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Insufficient balance',
+                        'data' => [
+                            'user' => $user,
+                            'tarif' => $tarif,
+                            'transaction' => $transaction,
+                            'balance_needed' => $tarif->harga,
+                            'current_balance' => $user->saldo
+                        ]
+                    ], 402);
+                } else {
+                    // Pay Later System - Allow negative balance
+                    Log::info('Pay Later Transaction', [
+                        'user_id' => $user->id,
+                        'plat_nomor' => $request->plat_nomor,
+                        'current_balance' => $user->saldo,
+                        'required_amount' => $tarif->harga,
+                        'shortage' => $tarif->harga - $user->saldo
+                    ]);
+                }
             }
 
             // Simpan saldo lama sebelum update
             $oldBalance = $user->saldo;
+            $payLaterMode = $user->saldo < $tarif->harga;
             
-            // Deduct balance
+            // Deduct balance (bisa menjadi negatif jika pay later)
             $newBalance = $user->saldo - $tarif->harga;
             $user->update(['saldo' => $newBalance]);
 
-            // Update gate condition ON & saldo
-            GateCondition::query()->update([
-                'gate_status' => 'ON',
-                'saldo' => $newBalance
-            ]);
+            // Update gate condition to open & saldo
+            GateCondition::updateOrCreate(
+                ['id' => 1],
+                [
+                    'gate_status' => 'open',
+                    'saldo' => $newBalance
+                ]
+            );
       
             // Create successful transaction record
+            $now = now(); // Get current time based on app timezone
             $transaction = Transaction::create([
                 'user_id' => $user->id,
                 'tarif_id' => $tarif->id,
                 'plat_nomor' => $request->plat_nomor,
                 'jenis_kendaraan' => $request->jenis_kendaraan,
                 'saldo_pembayaran' => $tarif->harga,
-                'status' => 'SUCCESS'
+                'status' => 'SUCCESS',
+                'created_at' => $now,
+                'updated_at' => $now
             ]);
 
             DB::commit();
             
+            $message = $payLaterMode ? 'Transaction successful (Pay Later)' : 'Transaction successful';
+            
             return response()->json([
                 'success' => true,
-                'message' => 'Transaction successful',
+                'message' => $message,
                 'data' => [
                     'user' => $user->fresh(),
                     'tarif' => $tarif,
                     'transaction' => $transaction,
                     'previous_balance' => $oldBalance, // Saldo sebelum dikurangi
-                    'current_balance' => $newBalance // Saldo setelah dikurangi
+                    'current_balance' => $newBalance, // Saldo setelah dikurangi (bisa negatif)
+                    'pay_later' => $payLaterMode,
+                    'negative_balance' => $newBalance < 0
                 ]
             ], 200);
 
@@ -223,31 +251,6 @@ class TransactionController extends Controller
         }
     }
 
-    public function getGateStatus()
-    {
-        // Ambil transaksi terakhir yang berhasil
-        $lastTransaction = Transaction::where('status', 'SUCCESS')
-            ->latest()
-            ->first();
-
-        if (!$lastTransaction) {
-            // Kalau belum ada transaksi sukses
-            return response()->json([
-                "success" => false,
-                "gate_status" => "off",
-                "sisa_saldo" => "Rp0"
-            ], 404);
-        }
-
-        // Ambil saldo user setelah transaksi terakhir
-        $user = $lastTransaction->user;
-        $sisaSaldo = "Rp" . number_format($user->saldo, 0, ',', '.');
-
-        return response()->json([
-            "success" => true,
-            "gate_status" => "on",
-            "sisa_saldo" => $sisaSaldo
-        ]);
-    }
+   
 
 }

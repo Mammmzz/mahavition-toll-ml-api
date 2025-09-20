@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import '../utils/constants.dart';
+import '../data/services/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -60,29 +61,59 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     });
   }
 
-  void _login() {
+  void _login() async {
     if (_formKey.currentState!.validate()) {
+      print('🚀 UI: Starting login process');
       setState(() {
         _isLoading = true;
       });
       
-      // Simulasikan proses login
-      Future.delayed(const Duration(seconds: 2), () {
-        setState(() {
-          _isLoading = false;
-        });
-        
-        // Tampilkan toast berhasil login
-        Fluttertoast.showToast(
-          msg: "Login berhasil!",
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.BOTTOM,
-          backgroundColor: AppColors.successColor,
-          textColor: Colors.white,
+      try {
+        print('📞 UI: Calling AuthService');
+        // Login sebenarnya menggunakan AuthService
+        final authService = AuthService();
+        final user = await authService.loginWithEmailAndPassword(
+          _emailController.text.trim(),
+          _passwordController.text.trim(),
         );
         
-        // Navigasi ke halaman berikutnya akan ditambahkan nanti
-      });
+        print('✅ UI: Login successful, user: ${user.email}');
+        
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+          
+          // Tampilkan toast berhasil login
+          Fluttertoast.showToast(
+            msg: "Login berhasil!",
+            toastLength: Toast.LENGTH_LONG,
+            gravity: ToastGravity.BOTTOM,
+            backgroundColor: AppColors.successColor,
+            textColor: Colors.white,
+          );
+          
+          // TODO: Implementasi navigasi dashboard nanti
+          print('✅ UI: Login completed successfully - no navigation yet');
+        }
+      } catch (e) {
+        print('❌ UI: Login failed with error: $e');
+        
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+          
+          // Tampilkan error
+          Fluttertoast.showToast(
+            msg: e.toString().replaceAll('Exception: ', ''),
+            toastLength: Toast.LENGTH_LONG,
+            gravity: ToastGravity.BOTTOM,
+            backgroundColor: AppColors.errorColor,
+            textColor: Colors.white,
+          );
+        }
+      }
     }
   }
 

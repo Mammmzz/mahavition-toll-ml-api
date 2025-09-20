@@ -16,10 +16,10 @@ class AppColors {
 }
 
 class AppStrings {
-  static const String appName = "E-Tol Plat";
+  static const String appName = "EZToll";
   static const String welcome = "Selamat Datang";
   static const String loginTitle = "Masuk ke Akun Anda";
-  static const String loginSubtitle = "Silakan masukkan kredensial Anda untuk mengakses layanan E-Tol Plat";
+  static const String loginSubtitle = "Silakan masukkan kredensial Anda untuk mengakses layanan EZToll";
   static const String email = "Email";
   static const String password = "Kata Sandi";
   static const String forgotPassword = "Lupa Kata Sandi?";

@@ -161,7 +161,7 @@ class UserController extends Controller
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'username' => 'required',
+            'email' => 'required|email',
             'password' => 'required'
         ]);
 
@@ -173,7 +173,7 @@ class UserController extends Controller
             ], 422);
         }
 
-        $user = User::where('username', $request->username)->first();
+        $user = User::where('email', $request->email)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([

@@ -20,9 +20,16 @@ class User {
   });
   
   factory User.fromJson(Map<String, dynamic> json) {
+    // Mencari nama pengguna dari berbagai kemungkinan field
+    String nama = json['nama_lengkap'] ?? 
+                  json['name'] ?? 
+                  json['nama'] ?? 
+                  json['username'] ?? 
+                  '';
+                  
     return User(
       id: json['id'] ?? 0,
-      nama: json['nama'] ?? '',
+      nama: nama,
       email: json['email'] ?? '',
       platNomor: json['plat_nomor'] ?? '',
       kelompokKendaraan: json['kelompok_kendaraan'] ?? 'Mobil',

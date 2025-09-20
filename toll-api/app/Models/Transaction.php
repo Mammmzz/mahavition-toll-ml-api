@@ -16,6 +16,8 @@ class Transaction extends Model
         'plat_nomor',
         'jenis_kendaraan',
         'status',
+        'created_at',
+        'updated_at',
     ];
     
     protected function casts(): array

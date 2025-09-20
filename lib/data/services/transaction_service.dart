@@ -2,7 +2,7 @@ import '../../core/services/api_service.dart';
 import '../../core/utils/api_constants.dart';
 import '../models/transaction_model.dart';
 import '../models/tarif_model.dart';
-import '../models/user_model.dart';
+import 'package:flutter/foundation.dart'; // Import for debugPrint
 
 class TransactionService {
   static final TransactionService _instance = TransactionService._internal();
@@ -27,7 +27,7 @@ class TransactionService {
       }
       return [];
     } catch (e) {
-      print('Error getting transactions: $e');
+      debugPrint('Error getting transactions: $e');
       return [];
     }
   }
@@ -40,15 +40,31 @@ class TransactionService {
         token: token,
       );
 
+      debugPrint('API Response for transactions: $response');
+
       if (response['success'] == true && response['data'] != null) {
         final List<dynamic> transactionList = response['data'];
-        return transactionList
+        
+        // Filter hanya transaksi dengan plat nomor yang sama dengan pengguna yang login
+        final filteredList = transactionList.where((json) => 
+          json['plat_nomor'] == plateNumber).toList();
+        
+        debugPrint('Filtered transactions for plate $plateNumber: ${filteredList.length} of ${transactionList.length}');
+        
+        // Urutkan transaksi dari yang terbaru
+        final transactions = filteredList
             .map((json) => Transaction.fromJson(json))
             .toList();
+        
+        // Urutkan berdasarkan tanggal terbaru
+        transactions.sort((a, b) => 
+          (b.createdAt ?? DateTime.now()).compareTo(a.createdAt ?? DateTime.now()));
+        
+        return transactions;
       }
       return [];
     } catch (e) {
-      print('Error getting transactions by plate: $e');
+      debugPrint('Error getting transactions by plate: $e');
       return [];
     }
   }
@@ -91,7 +107,7 @@ class TransactionService {
       }
       return [];
     } catch (e) {
-      print('Error getting tarifs: $e');
+      debugPrint('Error getting tarifs: $e');
       return [];
     }
   }
@@ -112,7 +128,7 @@ class TransactionService {
       }
       return null;
     } catch (e) {
-      print('Error getting tarif by vehicle type: $e');
+      debugPrint('Error getting tarif by vehicle type: $e');
       return null;
     }
   }
@@ -169,7 +185,7 @@ class TransactionService {
         'failed_transactions': 0,
       };
     } catch (e) {
-      print('Error getting transaction stats: $e');
+      debugPrint('Error getting transaction stats: $e');
       return {
         'total_transactions': 0,
         'total_amount': 0.0,

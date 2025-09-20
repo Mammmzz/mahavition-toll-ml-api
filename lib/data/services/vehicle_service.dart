@@ -1,6 +1,7 @@
 import '../../core/services/api_service.dart';
 import '../../core/utils/api_constants.dart';
 import '../models/user_model.dart';
+import 'package:flutter/foundation.dart'; // Import for debugPrint
 
 class VehicleService {
   static final VehicleService _instance = VehicleService._internal();
@@ -25,7 +26,7 @@ class VehicleService {
       }
       return [];
     } catch (e) {
-      print('Error getting vehicles: $e');
+      debugPrint('Error getting vehicles: $e');
       return [];
     }
   }
@@ -80,7 +81,7 @@ class VehicleService {
       }
       return null;
     } catch (e) {
-      print('Error getting vehicle by plate: $e');
+      debugPrint('Error getting vehicle by plate: $e');
       return null;
     }
   }
@@ -186,7 +187,7 @@ class VehicleService {
       }
       return [];
     } catch (e) {
-      print('Error searching vehicles: $e');
+      debugPrint('Error searching vehicles: $e');
       return [];
     }
   }

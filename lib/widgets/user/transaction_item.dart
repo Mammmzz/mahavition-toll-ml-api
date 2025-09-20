@@ -16,7 +16,8 @@ class TransactionItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateFormat = DateFormat('dd MMM yyyy, HH:mm');
+    // Format tanggal dengan format Indonesia
+    final dateFormat = DateFormat('dd MMM yyyy, HH:mm', 'id_ID');
     
     return InkWell(
       onTap: onTap,
@@ -46,13 +47,13 @@ class TransactionItem extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: _getStatusColor(transaction.status).withAlpha(20),
+                color: _getStatusColor(transaction.transactionStatus).withAlpha(20),
                 shape: BoxShape.circle,
               ),
               child: Center(
                 child: Icon(
-                  _getStatusIcon(transaction.status),
-                  color: _getStatusColor(transaction.status),
+                  _getStatusIcon(transaction.transactionStatus),
+                  color: _getStatusColor(transaction.transactionStatus),
                   size: 20,
                 ),
               ),
@@ -94,11 +95,11 @@ class TransactionItem extends StatelessWidget {
             ),
             // Amount
             Text(
-              'Rp${transaction.amount.toStringAsFixed(0)}',
+              'Rp${transaction.amount.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}',
               style: GoogleFonts.poppins(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: _getStatusColor(transaction.status),
+                color: _getStatusColor(transaction.transactionStatus),
               ),
             ),
           ],
