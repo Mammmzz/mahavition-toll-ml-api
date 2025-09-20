@@ -83,16 +83,19 @@ plat_nomor_backend/venv/
 /toll-api/npm-debug.log
 /toll-api/yarn-error.log
 
-# YOLO models (large files)
+# YOLO models (large files) - Allow specific model files
 *.pt
+!plat_nomor_backend/*.pt
 
-# Dataset files
+# Dataset files - Allow specific media files in plat_nomor_backend
 *.jpg
 *.jpeg
 *.png
 *.mp4
 *.avi
 *.mov
+!plat_nomor_backend/*.mp4
+!plat_nomor_backend/*.mp3
 
 # Temporary files
 *.tmp
